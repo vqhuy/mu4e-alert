@@ -334,6 +334,14 @@ formatter when user clicks on mode-line indicator"
 
 ;; Desktop notifications for unread emails
 
+
+;;;; alert.el hooks
+(defun mu4e-alert-open-buffer-command ()
+  "Open unread mails view."
+  (let* ((query "flag:unread AND NOT flag:trashed")
+         (cmd (format "(mu4e-headers-search-bookmark \\\"%s\\\")" query)))
+    (format "\"%s -e '%s'\"" emacsclient-command cmd)))
+
 ;;;; Setting urgency hint for Emacs frames
 (defun mu4e-alert--set-x-urgency-hint (frame arg)
   "Set window urgency hint for given FRAME.
@@ -464,7 +472,7 @@ ALL-MAILS are the all the unread emails"
                                (if (> mail-count 1) "s" "")))
          (field-value (mu4e-alert--get-group first-mail))
          (title-suffix (format (pcase mu4e-alert-group-by
-                                 (`:from "from %s:")
+                                 (`:from "from %s")
                                  (`:to "to %s:")
                                  (`:maildir "in %s:")
                                  (`:priority "with %s priority:")
@@ -472,8 +480,8 @@ ALL-MAILS are the all the unread emails"
                                field-value))
          (title (format "%s %s\n" title-prefix title-suffix)))
     (list :title title
-          :body (concat "• "
-                        (s-join "\n• "
+          :body (concat "📧 "
+                        (s-join "\n📧 "
                                 (mapcar (lambda (mail)
                                           (plist-get mail :subject))
                                         mail-group))))))
@@ -492,6 +500,7 @@ ALL-MAILS are the all the unread emails"
     (dolist (notification (cl-subseq notifications 0 (min 5 (length notifications))))
       (alert (plist-get notification :body)
              :title (plist-get notification :title)
+             :execute (mu4e-alert-open-buffer-command)
              :category "mu4e-alert"
              :icon mu4e-alert-icon))
     (when notifications

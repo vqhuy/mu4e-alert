@@ -1,0 +1,3 @@
+[submodule "alert"]
+	path = alert
+	url = git@github.com:vqhuy/alert.git
